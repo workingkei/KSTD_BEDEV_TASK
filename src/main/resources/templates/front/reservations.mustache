@@ -1,0 +1,144 @@
+{{>front/layout/header}}
+
+<!-- Main Content -->
+<div id="content">
+    {{>front/layout/navbar}}
+    <!-- Begin Page Content -->
+    <div class="container-fluid">
+
+        <!-- Page Heading -->
+        <h1 class="h3 mb-2 text-gray-800">신청 내역 조회</h1>
+        <p class="mb-4">강연 신청 내역을 확인할 수 있습니다.</p>
+        <!-- DataTales Example -->
+        <div class="card shadow mb-4">
+            <div class="card-body">
+                <div >
+                    <div class="row">
+                        <div class="col-md-4">
+                            <label for="employeeId">
+                                <input type="text" class="form-control" id="employeeId" placeholder="사번을 입력하세요." maxlength="5">
+                            </label>
+                        </div>
+                        <div class="col-md-2">
+                            <button type="button" class="btn btn-primary" onclick="searchReservations()">
+                                검색
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                <br>
+                <div class="table-responsive">
+                    <table class="table table-bordered" width="100%" cellspacing="0">
+                        <thead>
+                        <tr>
+                            <th>강연자</th>
+                            <th>강연장</th>
+                            <th>신청인원MAX</th>
+                            <th>강연시간</th>
+                            <th>강연내용</th>
+                            <th>신청취소</th>
+                        </tr>
+                        </thead>
+                        <tbody id="tbody">
+                            <tr>
+                                <td colspan="6">사번으로 검색해주세요</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+    <!-- /.container-fluid -->
+</div>
+<!-- End of Main Content -->
+
+<div class="modal fade" id="reserveModal" tabindex="-1" role="dialog" aria-labelledby="reserveModalLabel"
+     aria-hidden="true">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="reserveModalLabel">강연 신청</h5>
+                <button class="close" type="button" data-dismiss="modal" aria-label="Close" data-bs-toggle="modal" data-bs-target="#reserveModal">
+                    <span aria-hidden="true">×</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div>강연자: <span id="modalSpeaker"></span></div>
+                <div>강연장: <span id="modalVenue"></span></div>
+                <br>
+                <br>
+                <label for="employeeId">사번으로 신청</label>
+                <input type="text" class="form-control" id="employeeId" placeholder="사번을 입력하세요." maxlength="5">
+                <input type="hidden" id="lectureId" value="">
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-primary" type="button" data-dismiss="modal"  data-bs-toggle="modal" data-bs-target="#reserveModal">
+                    닫기
+                </button>
+                <button class="btn btn-secondary" type="button" onclick="doReserve()">
+                    신청
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+<script type="text/javascript">
+    function searchReservations() {
+        var employeeId = $("#employeeId").val();
+        if (employeeId == "") {
+            alert("사번을 입력해주세요.");
+            return;
+        }
+        $.ajax({
+            url: "/api/lecture-reservations/my-reservation-lectuers/" + employeeId,
+            type: "GET",
+            dataType: "json",
+            success: function (data) {
+                console.log(data)
+                var html = "";
+                if (data.length == 0) {
+                    html += "<tr>";
+                    html += "<td colspan='6'>신청 내역이 없습니다.</td>";
+                    html += "</tr>";
+                } else {
+                    for (var i = 0; i < data.length; i++) {
+                        html += `<tr>
+                                    <td>${data[i].speaker}</td>
+                                    <td>${data[i].venue}</td>
+                                    <td>${data[i].maxAttendees}</td>
+                                    <td>${data[i].startTime}</td>
+                                    <td>${data[i].contents}</td>
+                                    <td><button class='btn btn-danger' onclick='cancelReservation(${data[i].id})'>신청취소</button></td>
+                                </tr>`;
+                    }
+                }
+                $("#tbody").html(html);
+            },
+            error: function (request, status, error) {
+                alert("code:" + request.status + "\n" + "message:" + request.responseText + "\n" + "error:" + error);
+            }
+        });
+    }
+
+    function cancelReservation(lectureId) {
+        if (confirm("정말 취소하시겠습니까?")) {
+            $.ajax({
+                url: `/api/lecture-reservations/cancel/${$('#employeeId').val()}/${lectureId}`,
+                type: "DELETE",
+                success: function (data) {
+                    alert("취소되었습니다.");
+                    searchReservations();
+                },
+                error: function ({responseText}) {
+                    alert('취소에 실패하였습니다.\n' + responseText);
+                }
+            });
+        }
+    }
+
+
+</script>
+{{>front/layout/footer}}

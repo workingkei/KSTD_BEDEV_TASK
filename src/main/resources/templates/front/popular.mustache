@@ -1,0 +1,79 @@
+{{>front/layout/header}}
+
+<!-- Main Content -->
+<div id="content">
+    {{>front/layout/navbar}}
+    <!-- Begin Page Content -->
+    <div class="container-fluid">
+
+        <!-- Page Heading -->
+        <h1 class="h3 mb-2 text-gray-800">실시간 인기 강연 목록</h1>
+        <p class="mb-4">3일간 가장 신청이 많은 순</p>
+        <!-- DataTales Example -->
+        <div class="card shadow mb-4">
+            <div class="card-body">
+                <!--                <div class="d-flex justify-content-between">-->
+                <!--                    <button type="button" data-bs-toggle="modal" data-bs-target="#lecturesSaveModal" class="btn btn-primary">-->
+                <!--                        강연 추가-->
+                <!--                    </button>-->
+                <!--                </div>-->
+                <!--                <br>-->
+                <div class="table-responsive">
+                    <table class="table table-bordered" width="100%" cellspacing="0">
+                        <thead>
+                        <tr>
+                            <th>강연자</th>
+                            <th>강연장</th>
+                            <th>신청인원MAX</th>
+                            <th>신청자수</th>
+                            <th>강연시간</th>
+                            <th>강연내용</th>
+                        </tr>
+                        </thead>
+                        <tbody id="hotLectures">
+                            <tr>
+                                <td colspan="6">데이터가 없습니다.</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+    <!-- /.container-fluid -->
+</div>
+<!-- End of Main Content -->
+
+<script type="text/javascript">
+    $(function (){
+        getLecturesPopular();
+    });
+
+    function getLecturesPopular() {
+        $.ajax({
+            url: '/api/lectures/popular',
+            type: 'GET',
+            dataType: 'json',
+            success: function (data) {
+                if (data.length === 0) {
+                    $('#hotLectures').html('<tr><td colspan="6">데이터가 없습니다.</td></tr>');
+                    return;
+                }
+                let html = '';
+                $.each(data, function (index, item) {
+                    html += `<tr>
+                                <td>${item.speaker}</td>
+                                <td>${item.venue}</td>
+                                <td>${item.maxAttendees}</td>
+                                <td>${item.attendees}</td>
+                                <td>${moment(item.startTime).format('YYYY-MM-DD HH:mm:ss')}</td>
+                                <td>${item.contents}</td>
+                            </tr>`;
+                });
+                $('#hotLectures').html(html);
+            }
+        });
+    }
+
+</script>
+{{>front/layout/footer}}
